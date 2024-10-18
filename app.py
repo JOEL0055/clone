@@ -1,9 +1,11 @@
 from flask import Flask,render_template,request
-import google.generativeai as palm
+import google.generativeai as genai
+import textblob
+import os
 
-api = "AIzaSyCaQcgKn95ZO6AR1t2PXzk9UydTkt4sWZQ"
-palm.configure(api_key=api)
-model = {"model": "models/chat-bison-001"}
+api = os.getenv("MAKERSUITE")
+genai.configure(api_key=api)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 app = Flask(__name__)
 
@@ -18,8 +20,22 @@ def financial_FAQ():
 @app.route("/makersuite",methods=["GET","POST"])
 def makersuite():
     q = request.form.get("q")
-    r = palm.chat(messages=q, **model)
-    return(render_template("makersuite.html",r=r.last))
+    r = model.generate_content(q)
+    return(render_template("makersuite.html",r=r.text))
+
+@app.route("/sentiment_analysis",methods=["GET","POST"])
+def sentiment_analysis():
+    return(render_template("sentiment_analysis.html"))
+
+@app.route("/transfer_money",methods=["GET","POST"])
+def transfer_money():
+    return(render_template("transfer_money.html"))
+
+@app.route("/sentiment_analysis_result",methods=["GET","POST"])
+def sentiment_analysis_result():
+    q = request.form.get("q")
+    r=textblob.TextBlob(q).sentiment
+    return(render_template("sentiment_analysis_result.html",r=r))
 
 if __name__ == "__main__":
     app.run()
